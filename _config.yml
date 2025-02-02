@@ -34,15 +34,14 @@ twitter:
 social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
-  name: kyrylrybkin
-  email: example@domain.com # change to your email address
+  name: kyryl rybkin
+#  email: example@domain.com # change to your email address
   links:
     # The first element serves as the copyright owner's link
-    - https://twitter.com/kirillrybkin # change to your Twitter homepage
-    - https://github.com/fisher08 # change to your GitHub homepage
-    # Uncomment below to add more social links
-    # - https://www.facebook.com/username
-    # - https://www.linkedin.com/in/username
+    - https://linkedin.com/in/kirill-rybkin
+#    - https://twitter.com/kyryl_rybkin # change to your Twitter homepage
+#    - https://github.com/fisher08 # change to your GitHub homepage
+    - https://www.facebook.com/username
 
 # Site Verification Settings
 webmaster_verifications:
@@ -88,7 +87,7 @@ pageviews:
 #     light — Use the light color scheme
 #     dark — Use the dark color scheme
 #
-theme_mode: # [light | dark]
+theme_mode: light
 
 # The CDN endpoint for media resources.
 # Notice that once it is assigned, the CDN url
@@ -109,7 +108,7 @@ toc: true
 
 comments:
   # Global switch for the post-comment system. Keeping it empty means disabled.
-  provider: # [disqus | utterances | giscus]
+  provider: giscus
   # The provider options are as follows:
   disqus:
     shortname: # fill with the Disqus shortname. › https://help.disqus.com/en/articles/1717111-what-s-a-shortname

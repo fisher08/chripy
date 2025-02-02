@@ -5,13 +5,13 @@ description: >-
   You will learn how to install, configure, and use your first Chirpy-based website, as well as deploy it to a web server.
 author: kyrylrybkin
 date: 2022-11-14 20:55:00 +0800
-categories: [trading infrastructure]
+categories: [Software development]
 tags: [java]
 pin: true
 media_subpath: '/assets/posts/cache-friendly-application'
 ---
 ## Memory hierarchy
-Let's look at the cache hierarchy and data access time. The time depends on the hardware and is given to illustrate how many times each memory is faster or slower than the other.
+Let’s explore the memory hierarchy and its associated data access times. These values depend on the hardware and provide an understanding of how much faster or slower each type of memory is compared to the others.
 ### Processor registers
 Processor registers have the fastest access (typically 1 processor cycle) and can be as small as a few bytes.
 ### L1 cache
@@ -25,7 +25,9 @@ Main memory (primary storage) – this varies in size from 16 to 256 gigabytes. 
 ### Disk storage
 Disk storage (secondary storage) - This goes up to terabytes in size. Access speeds are around 100 microseconds for solid-state storage and around 300 microseconds for non-solid-state storage.
 
-Access times are given above for imaging, how many times each memory is faster or slower than the other.
+Access times are given above for imagination, how many times each memory is faster or slower than the other.
+
+We define an array containing 64 × 1024 × 1024 integer elements (~64 million integers). Two loops are implemented to manipulate this array:
 
 Let's define an array with 64 * 1024 * 1024 integer elements. In the code below we define two loops, the first iterates and multiplies each element by 4. The second loop iterates and multiplies each element by 16. Take a benchmark for two implementations. Which implementation is faster and how often? The second loop is faster in 1/16 of the time, isn't it?
 
@@ -74,9 +76,8 @@ CpuCache.accessfieldby_1   avgt    4  18.675 ±  2.091  ms/op
 CpuCache.accessfieldby_16  avgt    4  18.702 ±  0.447  ms/op
 CpuCache.baseline          avgt    4  ≈ 10⁻⁶           ms/op
 ```
-
-Why does it take the same time to multiply every 16th element round as it does to multiply every single element?
-The second loop only does a fraction of the work, so how is it possible for the first loop to run at the same speed? The answer lies in how the CPU uses the cache and why we use every 16th element. On my laptop, I got an L1 data and instruction cache of 32 kB per core, with a cache line size of 64 bytes.
+At first glance, it seems counterintuitive that multiplying every 16th element in an array takes roughly the same time as multiplying every single element. The second loop performs only a fraction of the operations, so how can the first loop match its speed? The answer lies in how the CPU leverages its cache and the significance of using every 16th element.
+On my laptop, the L1 data and instruction cache is 32 KB per core, with a cache line size of 64 bytes. This means the CPU fetches and processes data in chunks of 64 bytes (16 integers), regardless of whether the program accesses one or all integers in that cache line. As a result, both loops effectively access the same amount of data from the cache, leading to comparable execution times.
 ```terminal
 kyryl-rybkin@pc:~$ lscpu | grep "cache"
 L1d cache:                       192 KiB (6 instances)
@@ -95,7 +96,7 @@ LEVEL1_DCACHE_LINESIZE             64
 
 If we iterate over the data sequentially or per cache line, we can get roughly the same number of operations per second because L1 is closer to the core and fast enough.
 ## Data size and L1, L2, and L3 caches
-Let's consider whether the size of a data structure affects the runtime performance of software. We can do a little experiment. First, define the size of the array as params for the benchmark. Second, define a benchmark loop that could evaluate over the array and do the trivial operations, e.g. multiply by 3 on each cache line.
+Let’s consider whether the size of a data structure affects the runtime performance of software. We can conduct a small experiment to explore this. First, define the size of the array as parameters for the benchmark. Second, create a benchmark loop that iterates over the array and performs trivial operations, such as multiplying each element by 3 for every cache line.
 
 ```java
 @State(Scope.Thread)
@@ -156,13 +157,13 @@ ArraySize.benchLoop  134217728  avgt   25  5.177 ± 0.020  ns/op
 ArraySize.benchLoop  268435456  avgt   25  5.201 ± 0.033  ns/op
 ArraySize.benchLoop  536870912  avgt   25  5.320 ± 0.274  ns/op
 ```
-As we know, accessing a single element takes a constant time in Big O notation, O(1). But on the hardware we get a different cache level which has a different access time for stored data. If we iterate over the L1-L3 cache, it takes less than 2 ns/op to operate. But when we load data from main memory, it takes more time. If you look closely, you can even see the small jump between L1, L2 and L3 cache, with the access time increasing from L1 to L3 cache size.
+As we know, accessing a single element has a constant time complexity of O(1) in Big O notation. However, on actual hardware, different cache levels (L1, L2, L3) have varying access times for stored data. Iterating over data within the L1 to L3 cache typically takes less than 2 nanoseconds per operation. In contrast, loading data from main memory takes significantly longer. If you look closely, you can observe a small but noticeable jump in access time as you move from L1 to L2 and then to L3, with access times increasing as the cache size grows.
 ![Array-size](./img/array-size.png)
 
 Size matters. The smaller the amount of data you use for a particular data structure, the more likely it is to fit in the cache, which can lead to significantly better performance.
 
 ## Data access patterns. Random or Sequential memory access
-Does the order in which the data is accessed have an impact? Instead of just running sequentially through the array, let's create a second array to store the order in which the data is accessed. In the first case, access the array sequentially as before, and then access it in any order and measure the difference. Take a look at the listing below.
+Does the order in which data is accessed impact performance? Instead of iterating sequentially through the array, let’s create a second array to store the order in which data is accessed. First, access the array sequentially as before, and then access it in a random order. Measure the difference in performance between the two cases. Refer to the listing below for details.
 ```java
 @State(Scope.Thread)
 @BenchmarkMode(Mode.AverageTime)
@@ -268,9 +269,7 @@ The performance of the sequential access scheme is noticeably higher than in the
 
 ![Cache misses level impact of random access](./img/cache-messes-random-access.png)
 
-The ratio between successful loads and cache misses is very different for type data accesses. When the array is accessed sequentially, only about 6% of all memory loads result in cache misses. When data is accessed randomly, the number of cache misses increases. The high number of cache misses is quite expected, since the array does not fit in the cache and you have to load everything from RAM. But why are there almost no cache misses when accessing the array sequentially?
-Because there is a prefetcher that loads the data of the next cache line when interacting with the current line. That's why we can observe a low level of cache misses when sequentially accessing a small-sized array.
-
+The ratio between successful loads and cache misses varies significantly depending on the type of data access. When the array is accessed sequentially, only about 6% of memory loads result in cache misses. However, when data is accessed randomly, the number of cache misses increases dramatically. This high number of cache misses is expected because the array does not fit in the cache, requiring frequent data loads from RAM. But why are there so few cache misses when accessing the array sequentially? The answer lies in the prefetcher, which loads the next cache line while processing the current one. This behavior reduces cache misses significantly when accessing a small-sized array sequentially.
 ## Performance penalty with False Sharing
 ```java
 

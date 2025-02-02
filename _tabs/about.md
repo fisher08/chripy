@@ -3,6 +3,11 @@
 icon: fas fa-info-circle
 order: 4
 ---
+About
+Hi,
 
-> Add Markdown syntax content to file `_tabs/about.md`{: .filepath } and it will show up on this page.
-{: .prompt-tip }
+I am Kyryl Rybkin and this is a place where I write about software development, performance and financial markets. I am working mostly with Java.
+
+Find Me On
+[LinkedIn](https://www.linkedin.com/in/kirill-rybkin/)
+
